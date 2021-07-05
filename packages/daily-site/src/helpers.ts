@@ -1,11 +1,23 @@
 
-export function getProject(project_name: string, repo: string, projects: IDailyProject[]): IDailyProject | undefined {
+export function getProject(project_name: string, repo: string, projects: IDailyProject[]): IDailyProject {
 
-    const project = projects.find(project => project.name === project_name);
+    let project = projects.find(project => project.name === project_name);
 
-    if (project) {
-        project.repository = repo;
+    if (!project) {
+        project = {
+            name: project_name,
+            branches: {
+                main: [],
+                release: [],
+                feature: [],
+                user: [],
+                other: []
+            }
+        };
+        projects.push(project);
     }
+
+    project.repository = repo;
 
     return project;
 }
