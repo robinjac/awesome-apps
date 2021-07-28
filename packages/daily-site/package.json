@@ -3,8 +3,8 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
-    "dev": "yarn tsc --watch --outDir dist",
-    "build": "yarn tsc --outDir ../../.scripts",
+        "dev:update-daily": "yarn tsc --project tsconfig.update-daily.json --watch --outDir dist",
+        "build:update-daily": "yarn tsc --project tsconfig.update-daily.json --outDir ../../.scripts",
     "test": "echo test"
   },
   "devDependencies": {
