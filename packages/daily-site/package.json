@@ -1,14 +1,19 @@
 {
-  "name": "daily-site",
-  "version": "0.0.0",
-  "license": "MIT",
-  "scripts": {
+    "name": "daily-site",
+    "version": "0.0.0",
+    "license": "MIT",
+    "scripts": {
         "dev:update-daily": "yarn tsc --project tsconfig.update-daily.json --watch --outDir dist",
         "build:update-daily": "yarn tsc --project tsconfig.update-daily.json --outDir ../../.scripts",
-    "test": "echo test"
-  },
-  "devDependencies": {
-    "@types/node": "^16.0.0",
-    "typescript": "^4.1.3"
-  }
+        "dev": "vite",
+        "build": "tsc && vite build",
+        "serve": "vite preview",
+        "test": "echo test"
+    },
+    "devDependencies": {
+        "@types/node": "^16.0.0",
+        "typescript": "^4.3.2",
+        "vite": "^2.4.4",
+        "vite-plugin-elm": "^2.4.2"
+    }
 }
