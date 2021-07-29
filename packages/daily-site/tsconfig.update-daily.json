@@ -62,7 +62,7 @@
         "forceConsistentCasingInFileNames": true /* Disallow inconsistently-cased references to the same file. */
     },
     "include": [
-        "src/update-daily-script",
+        "src/update-daily",
         "tsconfig.update-daily.json",
         "@types"
     ]
