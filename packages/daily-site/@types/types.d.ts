@@ -1,7 +1,9 @@
- /**
- * Available branch types that can be shown on the daily site.
- * Defined here: https://github.com/optimizely/axiom-daily-sites/blob/master/.scripts/update_view.mjs#L50
- */
+/// <reference types="vite/client" />
+
+/**
+* Available branch types that can be shown on the daily site.
+* Defined here: https://github.com/optimizely/axiom-daily-sites/blob/master/.scripts/update_view.mjs#L50
+*/
 type BranchName = "main" | "release" | "user" | "other";
 type TDailyAction = "created" | "deleted" | "page-push";
 
