@@ -15,14 +15,5 @@
         "noUnusedLocals": true,
         "noUnusedParameters": true,
         "noImplicitReturns": true
-    },
-    "include": [
-        "src/daily-client",
-        "tsconfig.json"
-    ],
-    "typeAcquisition": {
-        "include": [
-            "@types"
-        ]
     }
 }
