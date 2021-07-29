@@ -1,7 +1,7 @@
 {
     "type": "application",
     "source-directories": [
-        "src/daily-cilent/elm"
+        "src/daily-client/elm"
     ],
     "elm-version": "0.19.1",
     "dependencies": {
