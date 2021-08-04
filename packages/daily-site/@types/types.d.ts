@@ -10,19 +10,18 @@ type TDailyAction = "created" | "deleted" | "page-push";
 interface IBranchData {
     name: string;
     slug: string;
-    jira?: string;
-    created: string;
+    date: string;
 }
 
 interface IDailyMetaData {
-    ID: number;
-    PROJECTS: IDailyProject[];
-    REPOSITORY: string;
+    id: number;
+    projects: IDailyProject[];
+    host_repository: string;
 }
 
 interface IDailyProject {
     name: string;
-    repository?: string;
+    repository: string;
     branches: {
         main: Array<string | IBranchData>;
         release: Array<string | IBranchData>;

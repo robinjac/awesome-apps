@@ -6,6 +6,7 @@ export function getProject(project_name: string, repo: string, projects: IDailyP
     if (!project) {
         project = {
             name: project_name,
+            repository: repo,
             branches: {
                 main: [],
                 release: [],
@@ -17,8 +18,6 @@ export function getProject(project_name: string, repo: string, projects: IDailyP
         projects.push(project);
     }
 
-    project.repository = repo;
-
     return project;
 }
 
@@ -29,14 +28,12 @@ export function actionHandler(action: TDailyAction, project: IDailyProject, bran
 
     const slug_name = slug(branch_name);
     const slug_parts = slug_name.split("-");
-    const jira = getJiraTag(slug_parts);
     const type = getBranchType(slug_parts);
 
     const branch_data = {
         name: branch_name.includes("/") ? branch_name : "N/A",
         slug: slug_name,
-        created: getCreatedDate(),
-        jira,
+        date: getDate()
     };
 
     switch (action.toLowerCase()) {
@@ -62,7 +59,7 @@ export function actionHandler(action: TDailyAction, project: IDailyProject, bran
     }
 }
 
-export function getCreatedDate(): string {
+export function getDate(): string {
     const date = new Date();
     const year = date.getFullYear();
     const month = date.getMonth() + 1;
@@ -72,20 +69,6 @@ export function getCreatedDate(): string {
     // Write the date in yyyy-mm-dd hh:mm.
     return `${year}-${month < 10 ? `0${month}` : month}-${day < 10 ? `0${day}` : day
         } ${hour}:${minute}`;
-}
-
-export function getJiraTag(slug_parts: string[]): string {
-    let jira_tag = "N/A";
-
-    if (slug_parts.includes("ax")) {
-        // We have a supported jira tag.
-        jira_tag = slug_parts
-            .filter((part, index) => part === "ax" || slug_parts[index - 1] === "ax")
-            .map((part) => part.toUpperCase())
-            .join("-");
-    }
-
-    return jira_tag;
 }
 
 export const main_branches = ["master", "develop", "devel", "main"];
