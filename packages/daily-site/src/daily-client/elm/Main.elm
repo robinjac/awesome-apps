@@ -1,7 +1,7 @@
 module Main exposing (Msg(..), main, update, view)
 
 import Browser
-import Html exposing (Html, div, h1, text)
+import Html exposing (Html, div, option, select, text)
 import Html.Attributes exposing (class)
 
 
@@ -34,8 +34,28 @@ type alias Project =
     }
 
 
+
+-- type alias State =
+--     { selectedRepo : String
+--     , selectedBranch : BranchName
+--     }
+
+
 type Msg
     = NoOp
+
+
+type alias BranchNames =
+    List String
+
+
+branchNames : BranchNames
+branchNames =
+    [ "main"
+    , "release"
+    , "user"
+    , "other"
+    ]
 
 
 init : Model -> ( Model, Cmd Msg )
@@ -60,19 +80,39 @@ update _ model =
 
 layout : Model -> Html Msg
 layout model =
-    model
-        |> content
-        |> div [ class "md:container md:mx-auto mt-16 border-solid border-2 border-red-300 rounded-md" ]
+    div [ class "md:container md:mx-auto mt-16 border-solid border-2 border-red-300 rounded-md" ] [ content model ]
 
 
-content : Model -> List (Html Msg)
-content model =
-    List.map header model.projects
+content : Model -> Html Msg
+content { projects } =
+    selectField
+        [ availableProjects projects
+        , availableBranches branchNames
+        ]
 
 
-header : Project -> Html Msg
-header project =
-    div [] [ h1 [] [ text project.name ] ]
+availableProjects : List Project -> Html Msg
+availableProjects projects =
+    projects |> List.map .name |> selectDropdown
+
+
+availableBranches : BranchNames -> Html Msg
+availableBranches branches =
+    branches |> selectDropdown
+
+
+selectDropdown : List String -> Html Msg
+selectDropdown items =
+    let
+        render item =
+            option [] [ text item ]
+    in
+    items |> List.map render |> select []
+
+
+selectField : List (Html msg) -> Html msg
+selectField selects =
+    div [ class "flex flex-row" ] selects
 
 
 view : Model -> Html Msg
