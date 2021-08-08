@@ -1,11 +1,14 @@
 module Main exposing (Msg(..), main, update, view)
 
 import Browser
-import Html exposing (Html, div, option, select, text)
-import Html.Attributes exposing (class)
+import Dict exposing (Dict)
+import Html exposing (Attribute, Html, div, option, select, text)
+import Html.Attributes exposing (class, value)
+import Html.Events exposing (onInput)
+import Maybe exposing (withDefault)
 
 
-type alias Model =
+type alias SiteMetaData =
     { id : Int
     , projects : List Project
     , host_repository : String
@@ -20,46 +23,112 @@ type alias BranchData =
 
 
 type alias Branches =
-    { main : List BranchData
-    , release : List BranchData
-    , user : List BranchData
-    , other : List BranchData
-    }
+    List (Maybe BranchData)
 
 
 type alias Project =
     { name : String
     , repository : String
+    , branches : BranchRecord
+    }
+
+
+type alias BranchRecord =
+    { main : Branches
+    , release : Branches
+    , user : Branches
+    , other : Branches
+    }
+
+
+type alias Model =
+    { selectedProject : String
+    , selectedBranchType : String
+    , projects : Dict String Project
     , branches : Branches
     }
 
 
-
--- type alias State =
---     { selectedRepo : String
---     , selectedBranch : BranchName
---     }
-
-
 type Msg
     = NoOp
+    | SelectProject String
+    | SelectBranchType String
 
 
-type alias BranchNames =
-    List String
+type BranchType
+    = Main
+    | Release
+    | User
+    | Other
 
 
-branchNames : BranchNames
-branchNames =
-    [ "main"
-    , "release"
-    , "user"
-    , "other"
-    ]
+branchTypes : List String
+branchTypes =
+    [ "main", "release", "user", "other" ]
 
 
-init : Model -> ( Model, Cmd Msg )
-init model =
+branchTypeToString : BranchType -> String
+branchTypeToString branchType =
+    case branchType of
+        Main ->
+            "main"
+
+        Release ->
+            "release"
+
+        User ->
+            "user"
+
+        Other ->
+            "other"
+
+
+defaultProject : Project
+defaultProject =
+    { name = "N/A"
+    , repository = "N/A"
+    , branches =
+        { main = []
+        , release = []
+        , user = []
+        , other = []
+        }
+    }
+
+
+branchRecordToDict : BranchRecord -> Dict String Branches
+branchRecordToDict branchRecord =
+    Dict.fromList [ ( branchTypeToString Main, branchRecord.main ), ( branchTypeToString Release, branchRecord.release ), ( branchTypeToString User, branchRecord.user ), ( branchTypeToString Other, branchRecord.other ) ]
+
+
+getBranches : String -> BranchRecord -> Branches
+getBranches branchType branchRecord =
+    case branchType of
+        "main" ->
+            branchRecord.main
+
+        "release" ->
+            branchRecord.release
+
+        "user" ->
+            branchRecord.user
+
+        _ ->
+            branchRecord.other
+
+
+init : SiteMetaData -> ( Model, Cmd Msg )
+init meta =
+    let
+        firstProject =
+            withDefault defaultProject (List.head meta.projects)
+
+        projects =
+            meta.projects |> List.map (\project -> ( project.name, project )) |> Dict.fromList
+
+        model =
+            { selectedBranchType = "main", selectedProject = firstProject.name, projects = projects, branches = firstProject.branches.main }
+    in
     ( model, Cmd.none )
 
 
@@ -68,14 +137,26 @@ subscriptions _ =
     Sub.none
 
 
-main : Program Model Model Msg
+main : Program SiteMetaData Model Msg
 main =
     Browser.element { init = init, subscriptions = subscriptions, update = update, view = view }
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
-update _ model =
-    ( model, Cmd.none )
+update msg model =
+    case msg of
+        NoOp ->
+            ( model, Cmd.none )
+
+        SelectBranchType branchType ->
+            let
+                currentProject =
+                    withDefault defaultProject (Dict.get model.selectedProject model.projects)
+            in
+            ( { model | selectedBranchType = branchType, branches = getBranches branchType currentProject.branches }, Cmd.none )
+
+        SelectProject project ->
+            ( { model | selectedProject = project }, Cmd.none )
 
 
 layout : Model -> Html Msg
@@ -84,30 +165,30 @@ layout model =
 
 
 content : Model -> Html Msg
-content { projects } =
+content model =
     selectField
-        [ availableProjects projects
-        , availableBranches branchNames
+        [ availableProjects model
+        , availableBranches
         ]
 
 
-availableProjects : List Project -> Html Msg
-availableProjects projects =
-    projects |> List.map .name |> selectDropdown
+availableProjects : Model -> Html Msg
+availableProjects model =
+    Dict.keys model.projects |> selectDropdown (onInput SelectProject)
 
 
-availableBranches : BranchNames -> Html Msg
-availableBranches branches =
-    branches |> selectDropdown
+availableBranches : Html Msg
+availableBranches =
+    branchTypes |> selectDropdown (onInput SelectBranchType)
 
 
-selectDropdown : List String -> Html Msg
-selectDropdown items =
+selectDropdown : Attribute Msg -> List String -> Html Msg
+selectDropdown handleClick items =
     let
         render item =
-            option [] [ text item ]
+            option [ value item ] [ text item ]
     in
-    items |> List.map render |> select []
+    items |> List.map render |> select [ handleClick ]
 
 
 selectField : List (Html msg) -> Html msg
