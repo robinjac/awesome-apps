@@ -73,8 +73,8 @@ defaultProject =
     }
 
 
-getBranches : String -> BranchRecord -> Branches
-getBranches branchType branchRecord =
+getBranchesByType : String -> BranchRecord -> Branches
+getBranchesByType branchType branchRecord =
     case branchType of
         "main" ->
             branchRecord.main
@@ -87,6 +87,15 @@ getBranches branchType branchRecord =
 
         _ ->
             branchRecord.other
+
+
+getBranches : Dict String Project -> String -> String -> Branches
+getBranches projects selectedProject selectedBranchType =
+    projects
+        |> Dict.get selectedProject
+        |> withDefault defaultProject
+        |> .branches
+        |> getBranchesByType selectedBranchType
 
 
 init : SiteMetaData -> ( Model, Cmd Msg )
@@ -121,14 +130,10 @@ update msg model =
             ( model, Cmd.none )
 
         SelectBranchType branchType ->
-            let
-                currentProject =
-                    withDefault defaultProject (Dict.get model.selectedProject model.projects)
-            in
-            ( { model | selectedBranchType = branchType, branches = getBranches branchType currentProject.branches }, Cmd.none )
+            ( { model | selectedBranchType = branchType, branches = getBranches model.projects model.selectedProject branchType }, Cmd.none )
 
         SelectProject project ->
-            ( { model | selectedProject = project }, Cmd.none )
+            ( { model | selectedProject = project, branches = getBranches model.projects project model.selectedBranchType }, Cmd.none )
 
 
 layout : Model -> Html Msg
