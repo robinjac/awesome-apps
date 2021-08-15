@@ -3,7 +3,7 @@ module Main exposing (Msg(..), main, update, view)
 import Browser
 import Dict exposing (Dict)
 import Html exposing (Attribute, Html, div, option, select, table, tbody, td, text, th, thead, tr)
-import Html.Attributes exposing (class, value)
+import Html.Attributes exposing (class, colspan, value)
 import Html.Events exposing (onInput)
 import Maybe exposing (withDefault)
 
@@ -169,8 +169,15 @@ tableContent branches =
 
         firstRows =
             List.drop 1 reversed |> List.map (rowElement NotLastRow)
+
+        rows =
+            firstRows ++ lastRow
     in
-    firstRows ++ lastRow
+    if List.length rows == 0 then
+        [ tr [ rowClass LastRow ] [ td [ colspan 3, class "text-center" ] [ text "no branches" ] ] ]
+
+    else
+        rows
 
 
 resolveBranches : Branches -> List BranchData
@@ -191,8 +198,8 @@ dailyTable branches =
         [ thead []
             [ tr [ rowClass NotLastRow ]
                 [ th [ class "text-left" ] [ text "Branch" ]
-                , th [ class "text-left" ] [ text "Updated" ]
-                , th [ class "text-center" ] [ text "Site" ]
+                , th [ class "text-left w-40" ] [ text "Updated" ]
+                , th [ class "text-center w-10" ] [ text "Site" ]
                 ]
             ]
         , tbody [] (tableContent branches)
