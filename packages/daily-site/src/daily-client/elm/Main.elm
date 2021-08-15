@@ -2,7 +2,7 @@ module Main exposing (Msg(..), main, update, view)
 
 import Browser
 import Dict exposing (Dict)
-import Html exposing (Attribute, Html, div, option, select, text)
+import Html exposing (Attribute, Html, div, option, select, table, tbody, td, text, th, thead, tr)
 import Html.Attributes exposing (class, value)
 import Html.Events exposing (onInput)
 import Maybe exposing (withDefault)
@@ -161,7 +161,69 @@ update msg model =
 
 layout : Model -> Html Msg
 layout model =
-    div [ class "md:container md:mx-auto mt-16 border-solid border-2 border-red-300 rounded-md" ] [ content model ]
+    div [ class "md:container md:mx-auto mt-16 p-2 border border-red-300 rounded-md" ]
+        [ content model
+        , dailyTable model.branches
+        ]
+
+
+type RowType
+    = LastRow
+    | NotLastRow
+
+
+rowClass : RowType -> Attribute msg
+rowClass row =
+    case row of
+        LastRow ->
+            class "h-12"
+
+        NotLastRow ->
+            class "h-12 border-b"
+
+
+tableContent : Branches -> List (Html Msg)
+tableContent branches =
+    let
+        rowElement rowType data =
+            tr [ rowClass rowType ] [ td [] [ text data.name ], td [ class "w-40" ] [ text data.date ], td [ class "w-10 text-center" ] [ text "+" ] ]
+
+        reversed =
+            branches |> resolveBranches |> List.reverse
+
+        lastRow =
+            List.take 1 reversed |> List.map (rowElement LastRow)
+
+        firstRows =
+            List.drop 1 reversed |> List.map (rowElement NotLastRow)
+    in
+    firstRows ++ lastRow
+
+
+resolveBranches : Branches -> List BranchData
+resolveBranches branches =
+    let
+        defaultBranchData =
+            { name = "N/A"
+            , slug = "N/A"
+            , date = "N/A"
+            }
+    in
+    List.map (\branchData -> withDefault defaultBranchData branchData) branches
+
+
+dailyTable : Branches -> Html Msg
+dailyTable branches =
+    table [ class "mt-8 w-full box-content" ]
+        [ thead []
+            [ tr [ rowClass NotLastRow ]
+                [ th [ class "text-left" ] [ text "Branch" ]
+                , th [ class "text-left" ] [ text "Updated" ]
+                , th [ class "text-center" ] [ text "Site" ]
+                ]
+            ]
+        , tbody [] (tableContent branches)
+        ]
 
 
 content : Model -> Html Msg
@@ -193,7 +255,7 @@ selectDropdown handleClick items =
 
 selectField : List (Html msg) -> Html msg
 selectField selects =
-    div [ class "flex flex-row" ] selects
+    div [ class "flex flex-row justify-between border border-red-900 rounded-md p-2 w-60" ] selects
 
 
 view : Model -> Html Msg
