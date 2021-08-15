@@ -55,32 +55,9 @@ type Msg
     | SelectBranchType String
 
 
-type BranchType
-    = Main
-    | Release
-    | User
-    | Other
-
-
 branchTypes : List String
 branchTypes =
     [ "main", "release", "user", "other" ]
-
-
-branchTypeToString : BranchType -> String
-branchTypeToString branchType =
-    case branchType of
-        Main ->
-            "main"
-
-        Release ->
-            "release"
-
-        User ->
-            "user"
-
-        Other ->
-            "other"
 
 
 defaultProject : Project
@@ -94,11 +71,6 @@ defaultProject =
         , other = []
         }
     }
-
-
-branchRecordToDict : BranchRecord -> Dict String Branches
-branchRecordToDict branchRecord =
-    Dict.fromList [ ( branchTypeToString Main, branchRecord.main ), ( branchTypeToString Release, branchRecord.release ), ( branchTypeToString User, branchRecord.user ), ( branchTypeToString Other, branchRecord.other ) ]
 
 
 getBranches : String -> BranchRecord -> Branches
