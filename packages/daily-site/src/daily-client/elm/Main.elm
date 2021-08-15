@@ -50,8 +50,7 @@ type alias Model =
 
 
 type Msg
-    = NoOp
-    | SelectProject String
+    = SelectProject String
     | SelectBranchType String
 
 
@@ -126,9 +125,6 @@ main =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        NoOp ->
-            ( model, Cmd.none )
-
         SelectBranchType branchType ->
             ( { model | selectedBranchType = branchType, branches = getBranches model.projects model.selectedProject branchType }, Cmd.none )
 
