@@ -3,8 +3,8 @@
     "version": "0.0.0",
     "license": "MIT",
     "scripts": {
-        "dev:update-daily": "yarn tsc --project tsconfig.update-daily.json --watch --outDir dist",
-        "build:update-daily": "yarn tsc --project tsconfig.update-daily.json --outDir ../../.scripts",
+        "tsc:watch": "yarn tsc --watch",
+        "build:update-daily": "esbuild src/update-daily/update_daily.ts --platform=node --bundle --minify --outfile=../../.scripts/update_daily.js",
         "dev": "vite",
         "build": "tsc && vite build",
         "serve": "vite preview",
