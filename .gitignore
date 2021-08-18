@@ -6,3 +6,4 @@ dist-ssr
 elm-stuff
 .vscode
 storybook-static
+packages/daily-site/.scripts
