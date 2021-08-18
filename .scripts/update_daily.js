@@ -1,34 +1,6 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-var fs_1 = require("fs");
-var child_process_1 = require("child_process");
-var helpers_1 = require("./helpers");
-var view_state = JSON.parse(fs_1.readFileSync("./tmp/www/view_state.json", "utf-8"));
-var _a = helpers_1.extractCommitData(process.argv.filter(function (arg) { return arg !== "--experimental-modules"; })[2]), action = _a.action, repository = _a.repository, project_name = _a.project_name, branch_name = _a.branch_name;
-var project = helpers_1.getProject(project_name, repository, view_state.PROJECTS);
-// If the model changed, we need to update the files.
-if (helpers_1.actionHandler(action, project, branch_name)) {
-    var index_html = fs_1.readFileSync("./tmp/index.html", "utf8");
-    // Generate some id that we can use to cache bust the file with. Date should be sufficient.
-    var id = Date.now();
-    if (index_html.includes(helpers_1.script_tag(view_state.ID))) {
-        index_html = index_html.replace(helpers_1.script_tag(view_state.ID), helpers_1.script_tag(id));
-    }
-    else {
-        index_html = index_html.replace('<div id="daily_site_model"></div>', helpers_1.script_tag(id));
-    }
-    // Update the id with new date value.
-    view_state.ID = id;
-    var model = "\n    // We wrap in a JSON.parse to tell the js engine that it's just a json, which is faster to parse then an ordinary js object.\n    // https://v8.dev/blog/cost-of-javascript-2019#json.\n    window.AXIOM_DAILY_SITE_DATA = JSON.parse('" + JSON.stringify(view_state) + "');\n    // Prevent mutation.\n    Object.freeze(window.AXIOM_DAILY_SITE_DATA);";
-    // Delete old view model.
-    try {
-        child_process_1.execSync("find www -maxdepth 1 -type f -name 'view_model.*.js' -delete");
-    }
-    catch (e) {
-        console.log(e);
-    }
-    // Save all updated files to the repository.
-    fs_1.writeFileSync("./tmp/www/view_state.json", JSON.stringify(view_state, null, 4));
-    fs_1.writeFileSync("./tmp/www/view_model." + id + ".js", model);
-    fs_1.writeFileSync("./tmp/index.html", index_html);
-}
+var _=Object.create;var u=Object.defineProperty;var y=Object.getOwnPropertyDescriptor;var x=Object.getOwnPropertyNames;var D=Object.getPrototypeOf,j=Object.prototype.hasOwnProperty;var v=t=>u(t,"__esModule",{value:!0});var A=(t,e,r)=>{if(e&&typeof e=="object"||typeof e=="function")for(let n of x(e))!j.call(t,n)&&n!=="default"&&u(t,n,{get:()=>e[n],enumerable:!(r=y(e,n))||r.enumerable});return t},m=t=>A(v(u(t!=null?_(D(t)):{},"default",t&&t.__esModule&&"default"in t?{get:()=>t.default,enumerable:!0}:{value:t,enumerable:!0})),t);var a=m(require("fs")),w=m(require("child_process"));function d(t,e,r){let n=r.find(i=>i.name===t);return n||(n={name:t,repository:e,branches:{main:[],release:[],feature:[],user:[],other:[]}},r.push(n)),n}var p=t=>`<script id="daily_site_view_model" src="./www/view_model.${t}.js"><\/script>`;function f(t,e,r){let n=B(r),i=n.split("-"),s=N(i),o={name:r.includes("/")?r:"N/A",slug:n,date:b()};switch(t.toLowerCase()){case"created":case"updated":return e.branches[s].find(l=>g(l,o))?!1:(e.branches[s].push(o),!0);case"deleted":return e.branches[s].find(l=>g(l,o))?(e.branches[s]=e.branches[s].filter(l=>!g(l,o)),!0):!1;case"page-push":return!0;default:return!1}}function b(){let t=new Date,e=t.getFullYear(),r=t.getMonth()+1,n=t.getDate(),i=t.getHours(),s=t.getMinutes();return`${e}-${r<10?`0${r}`:r}-${n<10?`0${n}`:n} ${i}:${s}`}var S=["master","develop","devel","development","main"],I=["main","release","feature","user","other"];function N(t){let e=t[0];return S.includes(e)?e="main":I.includes(e)||(e="other"),e}function g(t,e){let r=typeof t=="string"?t:t.name,n=typeof e=="string"?e:e.name;return r===n}var $=63;function T(t){return E(O(t)).substring(0,$)}function B(t){return T(t.toLowerCase())}function E(t){return t.replace(RegExp("^-*","g"),"").replace(RegExp("-*$","g"),"")}function O(t){return t.replace(RegExp("[^a-zA-Z0-9._]","g"),"-")}function h(t){let e=t.split(" "),r=e.shift(),n=e.shift(),i=e.length===2?n:e.shift(),s=e.shift(),o=e.shift();return{actor:r,action:s,project_name:i,repository:n,branch_name:o}}var c=JSON.parse((0,a.readFileSync)("./tmp/www/view_state.json","utf-8")),{action:P,repository:C,project_name:J,branch_name:L}=h(process.argv.filter(t=>t!=="--experimental-modules")[2]),H=d(J,C,c.projects);if(f(P,H,L)){let t=(0,a.readFileSync)("./tmp/index.html","utf8"),e=Date.now();t.includes(p(c.id))?t=t.replace(p(c.id),p(e)):t=t.replace('<div id="daily_site_model"></div>',p(e)),c.id=e;let r=`
+    // We wrap in a JSON.parse to tell the js engine that it's just a json, which is faster to parse then an ordinary js object.
+    // https://v8.dev/blog/cost-of-javascript-2019#json.
+    window.DAILY_SITE_DATA = JSON.parse('${JSON.stringify(c)}');
+    // Prevent mutation.
+    Object.freeze(window.DAILY_SITE_DATA);`;try{(0,w.execSync)("find www -maxdepth 1 -type f -name 'view_model.*.js' -delete")}catch(n){console.log(n)}(0,a.writeFileSync)("./tmp/www/view_state.json",JSON.stringify(c,null,4)),(0,a.writeFileSync)(`./tmp/www/view_model.${e}.js`,r),(0,a.writeFileSync)("./tmp/index.html",t)}
