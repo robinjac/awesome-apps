@@ -19,14 +19,16 @@ interface IDailyMetaData {
     host_repository: string;
 }
 
+interface IDailyBranches {
+    main: Array<string | IBranchData>;
+    release: Array<string | IBranchData>;
+    feature: Array<string | IBranchData>;
+    user: Array<string | IBranchData>;
+    other: Array<string | IBranchData>;
+}
+
 interface IDailyProject {
     name: string;
     repository: string;
-    branches: {
-        main: Array<string | IBranchData>;
-        release: Array<string | IBranchData>;
-        feature: Array<string | IBranchData>;
-        user: Array<string | IBranchData>;
-        other: Array<string | IBranchData>;
-    };
+    branches: IDailyBranches;
 }
