@@ -71,15 +71,15 @@ export function getDate(): string {
         } ${hour}:${minute}`;
 }
 
-export const main_branches = ["master", "develop", "devel", "main"];
-export const branch_types = ["main", "release", "feature", "user", "other"];
+export const main_branches = ["master", "develop", "devel", "development", "main"];
+export const branch_types: BranchName[] = ["main", "release", "feature", "user", "other"];
 
 export function getBranchType(slug_parts: string[]): BranchName {
     let type = slug_parts[0];
 
     if (main_branches.includes(type)) {
         type = "main";
-    } else if (!branch_types.includes(type)) {
+    } else if (!branch_types.includes(type as BranchName)) {
         type = "other";
     }
 
