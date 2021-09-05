@@ -2,9 +2,9 @@ module Main exposing (Msg(..), main, update, view)
 
 import Browser
 import Dict exposing (Dict)
-import Html exposing (Attribute, Html, div, option, select, table, tbody, td, text, th, thead, tr)
+import Html exposing (Attribute, Html, div, li, nav, option, select, table, tbody, td, text, th, thead, tr, ul)
 import Html.Attributes exposing (class, colspan, value)
-import Html.Events exposing (onInput)
+import Html.Events exposing (onClick, onInput)
 import Maybe exposing (withDefault)
 
 
@@ -41,17 +41,26 @@ type alias BranchRecord =
     }
 
 
+type Page
+    = Start
+    | End
+    | Prev
+    | Next
+
+
 type alias Model =
     { selectedProject : String
     , selectedBranchType : String
     , projects : Dict String Project
     , branches : Branches
+    , currentPageIndex : Int
     }
 
 
 type Msg
     = SelectProject String
     | SelectBranchType String
+    | Pagination Page
 
 
 branchTypes : List String
@@ -70,6 +79,11 @@ defaultProject =
         , other = []
         }
     }
+
+
+maxRows : Int
+maxRows =
+    10
 
 
 getBranchesByType : String -> BranchRecord -> Branches
@@ -107,7 +121,12 @@ init meta =
             meta.projects |> List.map (\project -> ( project.name, project )) |> Dict.fromList
 
         model =
-            { selectedBranchType = "main", selectedProject = firstProject.name, projects = projects, branches = firstProject.branches.main }
+            { selectedBranchType = "main"
+            , selectedProject = firstProject.name
+            , projects = projects
+            , branches = firstProject.branches.main
+            , currentPageIndex = 0
+            }
     in
     ( model, Cmd.none )
 
@@ -126,17 +145,46 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         SelectBranchType branchType ->
-            ( { model | selectedBranchType = branchType, branches = getBranches model.projects model.selectedProject branchType }, Cmd.none )
+            ( { model | selectedBranchType = branchType, branches = getBranches model.projects model.selectedProject branchType, currentPageIndex = 0 }, Cmd.none )
 
         SelectProject project ->
-            ( { model | selectedProject = project, branches = getBranches model.projects project model.selectedBranchType }, Cmd.none )
+            ( { model | selectedProject = project, branches = getBranches model.projects project model.selectedBranchType, currentPageIndex = 0 }, Cmd.none )
+
+        Pagination page ->
+            let
+                maxIndex =
+                    List.length model.branches // maxRows
+
+                nextPageIndex =
+                    case page of
+                        Start ->
+                            0
+
+                        Prev ->
+                            if model.currentPageIndex == 0 then
+                                model.currentPageIndex
+
+                            else
+                                model.currentPageIndex - 1
+
+                        Next ->
+                            if model.currentPageIndex >= maxIndex then
+                                model.currentPageIndex
+
+                            else
+                                model.currentPageIndex + 1
+
+                        End ->
+                            maxIndex
+            in
+            ( { model | currentPageIndex = nextPageIndex }, Cmd.none )
 
 
 layout : Model -> Html Msg
 layout model =
     div [ class "md:container md:mx-auto mt-16 p-2 border border-red-300 rounded-md" ]
         [ content model
-        , dailyTable model.branches
+        , dailyTable model
         ]
 
 
@@ -155,23 +203,31 @@ rowClass row =
             class "h-12 border-b"
 
 
-tableContent : Branches -> List (Html Msg)
-tableContent branches =
+tableContent : Model -> List (Html Msg)
+tableContent model =
     let
         rowElement rowType data =
             tr [ rowClass rowType ] [ td [] [ text data.name ], td [ class "w-40" ] [ text data.date ], td [ class "w-10 text-center" ] [ text "+" ] ]
 
         reversed =
-            branches |> resolveBranches |> List.reverse
+            model.branches |> resolveBranches |> List.reverse
+
+        visibleRows =
+            reversed
+                |> List.drop (model.currentPageIndex * maxRows)
+                |> List.take maxRows
 
         lastRow =
-            List.take 1 reversed |> List.map (rowElement LastRow)
+            List.take 1 visibleRows |> List.map (rowElement LastRow)
 
         firstRows =
-            List.drop 1 reversed |> List.map (rowElement NotLastRow)
+            List.drop 1 visibleRows |> List.map (rowElement NotLastRow)
+
+        paginationRow =
+            [ tr [ rowClass LastRow ] [ td [ colspan 3 ] [ pagination model.currentPageIndex (List.length visibleRows) (List.length reversed) ] ] ]
 
         rows =
-            firstRows ++ lastRow
+            firstRows ++ (lastRow ++ paginationRow)
     in
     if List.length rows == 0 then
         [ tr [ rowClass LastRow ] [ td [ colspan 3, class "text-center" ] [ text "no branches" ] ] ]
@@ -192,8 +248,8 @@ resolveBranches branches =
     List.map (\branchData -> withDefault defaultBranchData branchData) branches
 
 
-dailyTable : Branches -> Html Msg
-dailyTable branches =
+dailyTable : Model -> Html Msg
+dailyTable model =
     table [ class "mt-8 w-full box-content" ]
         [ thead []
             [ tr [ rowClass NotLastRow ]
@@ -202,7 +258,7 @@ dailyTable branches =
                 , th [ class "text-center w-10" ] [ text "Site" ]
                 ]
             ]
-        , tbody [] (tableContent branches)
+        , tbody [] (tableContent model)
         ]
 
 
@@ -230,12 +286,42 @@ selectDropdown handleClick items =
         render item =
             option [ value item ] [ text item ]
     in
-    items |> List.map render |> select [ handleClick ]
+    items |> List.map render |> select [ class "cursor-pointer", handleClick ]
 
 
 selectField : List (Html msg) -> Html msg
 selectField selects =
     div [ class "flex flex-row justify-between border border-red-900 rounded-md p-2 w-60" ] selects
+
+
+shouldDisable : Bool -> String
+shouldDisable bool =
+    if bool then
+        "pointer-events-none opacity-40"
+
+    else
+        ""
+
+
+pagination : Int -> Int -> Int -> Html Msg
+pagination page rows pages =
+    let
+        visablePages =
+            page * maxRows
+
+        liClasses =
+            "border border-red-700 rounded-md mr-1 text-center leading-8 w-8 h-8 hover:bg-red-200 cursor-pointer select-none"
+    in
+    nav [ class "flex justify-between" ]
+        [ div [ class "flex items-center ml-2" ] [ text (Debug.toString (1 + visablePages) ++ "-" ++ Debug.toString (rows + visablePages)), text (" of " ++ Debug.toString pages) ]
+        , ul
+            [ class "flex list-none mr-2" ]
+            [ li [ class (liClasses ++ shouldDisable (page == 0)), onClick (Pagination Start) ] [ text "|<" ]
+            , li [ class (liClasses ++ shouldDisable (page == 0)), onClick (Pagination Prev) ] [ text "<" ]
+            , li [ class (liClasses ++ shouldDisable (1 + visablePages + maxRows >= pages)), onClick (Pagination Next) ] [ text ">" ]
+            , li [ class (liClasses ++ shouldDisable (1 + visablePages + maxRows >= pages)), onClick (Pagination End) ] [ text ">|" ]
+            ]
+        ]
 
 
 view : Model -> Html Msg
