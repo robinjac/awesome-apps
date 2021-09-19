@@ -10,17 +10,17 @@ module.exports = {
             lg: '976px',
             xl: '1440px',
         },
-        colors: {
-            gray: colors.coolGray,
-            blue: colors.sky,
-            red: colors.rose,
-            pink: colors.fuchsia,
-        },
         fontFamily: {
             sans: ['Graphik', 'sans-serif'],
             serif: ['Merriweather', 'serif'],
         },
         extend: {
+            colors: {
+                gray: colors.coolGray,
+                blue: colors.sky,
+                red: colors.rose,
+                pink: colors.fuchsia,
+            },
             spacing: {
                 '128': '32rem',
                 '144': '36rem',

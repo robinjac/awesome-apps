@@ -3,7 +3,7 @@ module Main exposing (Msg(..), main, update, view)
 import Browser
 import Dict exposing (Dict)
 import Html exposing (Attribute, Html)
-import Html.Attributes exposing (class, colspan, value)
+import Html.Attributes as Attr exposing (class, colspan, value)
 import Html.Events exposing (onClick, onInput)
 import Maybe exposing (withDefault)
 
@@ -184,7 +184,7 @@ layout : Model -> Html Msg
 layout model =
     let
         rowElement rowType data =
-            Html.tr [ rowClass rowType ] [ Html.td [] [ Html.text data.name ], Html.td [ class "w-40" ] [ Html.text data.date ], Html.td [ class "w-10 text-center" ] [ Html.text "+" ] ]
+            Html.tr [ rowClass rowType ] [ Html.td [] [ Html.text data.name ], Html.td [ class "w-40" ] [ Html.text data.date ], Html.td [ class "w-10 text-center" ] [ Html.a [ class "px-1 border font-bold border-gray-300 bg-gray-200 text-gray-900 hover:bg-gray-900 hover:text-white rounded", Attr.href "" ] [ Html.text "+" ] ] ]
 
         reversed =
             model.branches |> resolveBranches |> List.reverse
@@ -203,7 +203,7 @@ layout model =
         rows =
             firstRows ++ lastRow
     in
-    Html.div [ class "md:container md:mx-auto mt-16 p-2 border min-h-664 border-red-300 rounded-md flex flex-col justify-self-start" ]
+    Html.div [ class "md:container md:mx-auto mt-16 p-2 border min-h-664 border-gray-200 rounded-md flex flex-col justify-self-start" ]
         [ content model
         , dailyTable rows
         , pagination model.currentPageIndex (List.length visibleRows) (List.length reversed)
@@ -222,7 +222,7 @@ rowClass row =
             class "h-12"
 
         NotLastRow ->
-            class "h-12 border-b"
+            class "h-12 border-b border-gray-200 "
 
 
 tableContent : List (Html Msg) -> List (Html Msg)
@@ -284,12 +284,12 @@ selectDropdown handleClick items =
         render item =
             Html.option [ value item ] [ Html.text item ]
     in
-    items |> List.map render |> Html.select [ class "cursor-pointer", handleClick ]
+    items |> List.map render |> Html.select [ class " text-gray-900 cursor-pointer", handleClick ]
 
 
 selectField : List (Html msg) -> Html msg
 selectField selects =
-    Html.div [ class "flex flex-row justify-between border border-red-900 rounded-md p-2 w-60 select-none" ] selects
+    Html.div [ class "flex flex-row justify-between border border-gray-300  rounded-md p-1 w-60 select-none" ] selects
 
 
 shouldDisable : Bool -> String
@@ -308,7 +308,7 @@ pagination page rows pages =
             page * maxRows
 
         liClasses =
-            "border border-red-700 rounded-md mr-1 text-center leading-8 w-8 h-8 hover:bg-red-200 cursor-pointer select-none"
+            "border font-bold border-gray-300 bg-gray-200 text-gray-900 hover:bg-gray-900 hover:text-white rounded-md mr-1 text-center leading-8 w-8 h-8 cursor-pointer select-none"
     in
     Html.nav [ class "w-full flex justify-between mt-auto" ]
         [ Html.div [ class "flex items-center ml-2" ] [ Html.text (Debug.toString (1 + visablePages) ++ "-" ++ Debug.toString (rows + visablePages)), Html.text (" of " ++ Debug.toString pages) ]
