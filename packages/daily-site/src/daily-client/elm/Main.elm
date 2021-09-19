@@ -291,7 +291,7 @@ selectDropdown handleClick items =
 
 selectField : List (Html msg) -> Html msg
 selectField selects =
-    div [ class "flex flex-row justify-between border border-red-900 rounded-md p-2 w-60" ] selects
+    div [ class "flex flex-row justify-between border border-red-900 rounded-md p-2 w-60 select-none" ] selects
 
 
 shouldDisable : Bool -> String
