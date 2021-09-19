@@ -23,7 +23,7 @@ type alias BranchData =
 
 
 type alias Branches =
-    List (Maybe BranchData)
+    List BranchData
 
 
 type alias Project =
@@ -31,6 +31,10 @@ type alias Project =
     , repository : String
     , branches : BranchRecord
     }
+
+
+type alias Projects =
+    Dict String Project
 
 
 type alias BranchRecord =
@@ -49,11 +53,12 @@ type Page
 
 
 type alias Model =
-    { selectedProject : String
+    { selectedProject : Maybe Project
     , selectedBranchType : String
-    , projects : Dict String Project
-    , branches : Branches
+    , projects : Projects
+    , branches : Maybe Branches
     , currentPageIndex : Int
+    , hostRepository : String
     }
 
 
@@ -66,19 +71,6 @@ type Msg
 branchTypes : List String
 branchTypes =
     [ "main", "release", "user", "other" ]
-
-
-defaultProject : Project
-defaultProject =
-    { name = "N/A"
-    , repository = "N/A"
-    , branches =
-        { main = []
-        , release = []
-        , user = []
-        , other = []
-        }
-    }
 
 
 maxRows : Int
@@ -102,30 +94,32 @@ getBranchesByType branchType branchRecord =
             branchRecord.other
 
 
-getBranches : Dict String Project -> String -> String -> Branches
-getBranches projects selectedProject selectedBranchType =
-    projects
-        |> Dict.get selectedProject
-        |> withDefault defaultProject
-        |> .branches
-        |> getBranchesByType selectedBranchType
+getBranches : Maybe Project -> String -> Projects -> Maybe Branches
+getBranches project branchType projects =
+    Maybe.andThen
+        (\{ name } ->
+            Dict.get name projects
+                |> Maybe.map (.branches >> getBranchesByType branchType)
+        )
+        project
 
 
 init : SiteMetaData -> ( Model, Cmd Msg )
 init meta =
     let
         firstProject =
-            withDefault defaultProject (List.head meta.projects)
+            List.head meta.projects
 
         projects =
             meta.projects |> List.map (\project -> ( project.name, project )) |> Dict.fromList
 
         model =
             { selectedBranchType = "main"
-            , selectedProject = firstProject.name
+            , selectedProject = firstProject
             , projects = projects
-            , branches = firstProject.branches.main
+            , branches = Maybe.map (.branches >> .main) firstProject
             , currentPageIndex = 0
+            , hostRepository = meta.host_repository
             }
     in
     ( model, Cmd.none )
@@ -145,15 +139,19 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         SelectBranchType branchType ->
-            ( { model | selectedBranchType = branchType, branches = getBranches model.projects model.selectedProject branchType, currentPageIndex = 0 }, Cmd.none )
+            ( { model | selectedBranchType = branchType, branches = getBranches model.selectedProject branchType model.projects, currentPageIndex = 0 }, Cmd.none )
 
-        SelectProject project ->
-            ( { model | selectedProject = project, branches = getBranches model.projects project model.selectedBranchType, currentPageIndex = 0 }, Cmd.none )
+        SelectProject projectName ->
+            let
+                project =
+                    Dict.get projectName model.projects
+            in
+            ( { model | selectedProject = project, branches = getBranches project model.selectedBranchType model.projects, currentPageIndex = 0 }, Cmd.none )
 
         Pagination page ->
             let
                 maxIndex =
-                    List.length model.branches // maxRows
+                    List.length (withDefault [] model.branches) // maxRows
 
                 nextPageIndex =
                     case page of
@@ -180,14 +178,33 @@ update msg model =
             ( { model | currentPageIndex = nextPageIndex }, Cmd.none )
 
 
+dailyUrl : Model -> BranchData -> Maybe String
+dailyUrl { selectedProject, hostRepository } data =
+    Maybe.map (\{ name } -> String.join "/" [ "/" ++ hostRepository, name, data.slug ]) selectedProject
+
+
+rowElement : Model -> RowType -> BranchData -> Html Msg
+rowElement model rowType data =
+    Html.tr [ rowClass rowType ]
+        [ Html.td []
+            [ Html.text data.name
+            ]
+        , Html.td [ class "w-40" ] [ Html.text data.date ]
+        , Html.td [ class "w-10 text-center" ]
+            [ Html.a
+                [ class "px-1 border font-bold border-gray-300 bg-gray-200 text-gray-900 hover:bg-gray-900 hover:text-white rounded"
+                , Attr.href (withDefault "" (dailyUrl model data))
+                ]
+                [ Html.text "+" ]
+            ]
+        ]
+
+
 layout : Model -> Html Msg
 layout model =
     let
-        rowElement rowType data =
-            Html.tr [ rowClass rowType ] [ Html.td [] [ Html.text data.name ], Html.td [ class "w-40" ] [ Html.text data.date ], Html.td [ class "w-10 text-center" ] [ Html.a [ class "px-1 border font-bold border-gray-300 bg-gray-200 text-gray-900 hover:bg-gray-900 hover:text-white rounded", Attr.href "" ] [ Html.text "+" ] ] ]
-
         reversed =
-            model.branches |> resolveBranches |> List.reverse
+            model.branches |> withDefault [] |> List.reverse
 
         visibleRows =
             reversed
@@ -195,10 +212,10 @@ layout model =
                 |> List.take maxRows
 
         lastRow =
-            List.take 1 visibleRows |> List.map (rowElement LastRow)
+            List.take 1 visibleRows |> List.map (rowElement model LastRow)
 
         firstRows =
-            List.drop 1 visibleRows |> List.map (rowElement NotLastRow)
+            List.drop 1 visibleRows |> List.map (rowElement model NotLastRow)
 
         rows =
             firstRows ++ lastRow
@@ -232,18 +249,6 @@ tableContent rows =
 
     else
         rows
-
-
-resolveBranches : Branches -> List BranchData
-resolveBranches branches =
-    let
-        defaultBranchData =
-            { name = "N/A"
-            , slug = "N/A"
-            , date = "N/A"
-            }
-    in
-    List.map (\branchData -> withDefault defaultBranchData branchData) branches
 
 
 dailyTable : List (Html Msg) -> Html Msg
@@ -289,7 +294,7 @@ selectDropdown handleClick items =
 
 selectField : List (Html msg) -> Html msg
 selectField selects =
-    Html.div [ class "flex flex-row justify-between border border-gray-300  rounded-md p-1 w-60 select-none" ] selects
+    Html.div [ class "flex flex-row justify-between border border-gray-300 rounded-md p-1 w-60 select-none" ] selects
 
 
 shouldDisable : Bool -> String
