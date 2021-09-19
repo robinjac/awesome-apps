@@ -2,7 +2,7 @@ module Main exposing (Msg(..), main, update, view)
 
 import Browser
 import Dict exposing (Dict)
-import Html exposing (Attribute, Html, div, li, nav, option, select, table, tbody, td, text, th, thead, tr, ul)
+import Html exposing (Attribute, Html)
 import Html.Attributes exposing (class, colspan, value)
 import Html.Events exposing (onClick, onInput)
 import Maybe exposing (withDefault)
@@ -184,7 +184,7 @@ layout : Model -> Html Msg
 layout model =
     let
         rowElement rowType data =
-            tr [ rowClass rowType ] [ td [] [ text data.name ], td [ class "w-40" ] [ text data.date ], td [ class "w-10 text-center" ] [ text "+" ] ]
+            Html.tr [ rowClass rowType ] [ Html.td [] [ Html.text data.name ], Html.td [ class "w-40" ] [ Html.text data.date ], Html.td [ class "w-10 text-center" ] [ Html.text "+" ] ]
 
         reversed =
             model.branches |> resolveBranches |> List.reverse
@@ -203,7 +203,7 @@ layout model =
         rows =
             firstRows ++ lastRow
     in
-    div [ class "md:container md:mx-auto mt-16 p-2 border min-h-664 border-red-300 rounded-md flex flex-col justify-self-start" ]
+    Html.div [ class "md:container md:mx-auto mt-16 p-2 border min-h-664 border-red-300 rounded-md flex flex-col justify-self-start" ]
         [ content model
         , dailyTable rows
         , pagination model.currentPageIndex (List.length visibleRows) (List.length reversed)
@@ -228,7 +228,7 @@ rowClass row =
 tableContent : List (Html Msg) -> List (Html Msg)
 tableContent rows =
     if List.length rows == 0 then
-        [ tr [ rowClass LastRow ] [ td [ colspan 3, class "text-center" ] [ text "no branches" ] ] ]
+        [ Html.tr [ rowClass LastRow ] [ Html.td [ colspan 3, class "text-center" ] [ Html.text "no branches" ] ] ]
 
     else
         rows
@@ -248,15 +248,15 @@ resolveBranches branches =
 
 dailyTable : List (Html Msg) -> Html Msg
 dailyTable rows =
-    table [ class "mt-8 w-full box-content" ]
-        [ thead []
-            [ tr [ rowClass NotLastRow ]
-                [ th [ class "text-left" ] [ text "Branch" ]
-                , th [ class "text-left w-40" ] [ text "Updated" ]
-                , th [ class "text-center w-10" ] [ text "Site" ]
+    Html.table [ class "mt-8 w-full box-content" ]
+        [ Html.thead []
+            [ Html.tr [ rowClass NotLastRow ]
+                [ Html.th [ class "text-left" ] [ Html.text "Branch" ]
+                , Html.th [ class "text-left w-40" ] [ Html.text "Updated" ]
+                , Html.th [ class "text-center w-10" ] [ Html.text "Site" ]
                 ]
             ]
-        , tbody [] (tableContent rows)
+        , Html.tbody [] (tableContent rows)
         ]
 
 
@@ -282,14 +282,14 @@ selectDropdown : Attribute Msg -> List String -> Html Msg
 selectDropdown handleClick items =
     let
         render item =
-            option [ value item ] [ text item ]
+            Html.option [ value item ] [ Html.text item ]
     in
-    items |> List.map render |> select [ class "cursor-pointer", handleClick ]
+    items |> List.map render |> Html.select [ class "cursor-pointer", handleClick ]
 
 
 selectField : List (Html msg) -> Html msg
 selectField selects =
-    div [ class "flex flex-row justify-between border border-red-900 rounded-md p-2 w-60 select-none" ] selects
+    Html.div [ class "flex flex-row justify-between border border-red-900 rounded-md p-2 w-60 select-none" ] selects
 
 
 shouldDisable : Bool -> String
@@ -310,14 +310,14 @@ pagination page rows pages =
         liClasses =
             "border border-red-700 rounded-md mr-1 text-center leading-8 w-8 h-8 hover:bg-red-200 cursor-pointer select-none"
     in
-    nav [ class "w-full flex justify-between mt-auto" ]
-        [ div [ class "flex items-center ml-2" ] [ text (Debug.toString (1 + visablePages) ++ "-" ++ Debug.toString (rows + visablePages)), text (" of " ++ Debug.toString pages) ]
-        , ul
+    Html.nav [ class "w-full flex justify-between mt-auto" ]
+        [ Html.div [ class "flex items-center ml-2" ] [ Html.text (Debug.toString (1 + visablePages) ++ "-" ++ Debug.toString (rows + visablePages)), Html.text (" of " ++ Debug.toString pages) ]
+        , Html.ul
             [ class "flex list-none mr-2" ]
-            [ li [ class (liClasses ++ shouldDisable (page == 0)), onClick (Pagination Start) ] [ text "|<" ]
-            , li [ class (liClasses ++ shouldDisable (page == 0)), onClick (Pagination Prev) ] [ text "<" ]
-            , li [ class (liClasses ++ shouldDisable (1 + visablePages + maxRows >= pages)), onClick (Pagination Next) ] [ text ">" ]
-            , li [ class (liClasses ++ shouldDisable (1 + visablePages + maxRows >= pages)), onClick (Pagination End) ] [ text ">|" ]
+            [ Html.li [ class (liClasses ++ shouldDisable (page == 0)), onClick (Pagination Start) ] [ Html.text "|<" ]
+            , Html.li [ class (liClasses ++ shouldDisable (page == 0)), onClick (Pagination Prev) ] [ Html.text "<" ]
+            , Html.li [ class (liClasses ++ shouldDisable (1 + visablePages + maxRows >= pages)), onClick (Pagination Next) ] [ Html.text ">" ]
+            , Html.li [ class (liClasses ++ shouldDisable (1 + visablePages + maxRows >= pages)), onClick (Pagination End) ] [ Html.text ">|" ]
             ]
         ]
 
