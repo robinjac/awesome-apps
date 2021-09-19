@@ -316,7 +316,7 @@ pagination page rows pages =
             "border font-bold border-gray-300 bg-gray-200 text-gray-900 rounded-md mr-1 text-center leading-8 w-8 h-8 cursor-pointer select-none"
     in
     Html.nav [ class "w-full flex justify-between mt-auto" ]
-        [ Html.div [ class "flex items-center ml-2" ] [ Html.text (Debug.toString (1 + visablePages) ++ "-" ++ Debug.toString (rows + visablePages)), Html.text (" of " ++ Debug.toString pages) ]
+        [ Html.div [ class "flex items-center ml-2" ] [ Html.text (String.fromInt (1 + visablePages) ++ "-" ++ String.fromInt (rows + visablePages)), Html.text (" of " ++ String.fromInt pages) ]
         , Html.ul
             [ class "flex list-none mr-2" ]
             [ Html.li [ class (liClasses ++ shouldDisable (page == 0)), onClick (Pagination Start) ] [ Html.text "|<" ]
