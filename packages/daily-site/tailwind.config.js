@@ -27,6 +27,9 @@ module.exports = {
             },
             borderRadius: {
                 '4xl': '2rem',
+            },
+            minHeight: {
+                '664': '664px'
             }
         }
     },

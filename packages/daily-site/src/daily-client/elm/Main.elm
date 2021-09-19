@@ -182,29 +182,6 @@ update msg model =
 
 layout : Model -> Html Msg
 layout model =
-    div [ class "md:container md:mx-auto mt-16 p-2 border border-red-300 rounded-md" ]
-        [ content model
-        , dailyTable model
-        ]
-
-
-type RowType
-    = LastRow
-    | NotLastRow
-
-
-rowClass : RowType -> Attribute msg
-rowClass row =
-    case row of
-        LastRow ->
-            class "h-12"
-
-        NotLastRow ->
-            class "h-12 border-b"
-
-
-tableContent : Model -> List (Html Msg)
-tableContent model =
     let
         rowElement rowType data =
             tr [ rowClass rowType ] [ td [] [ text data.name ], td [ class "w-40" ] [ text data.date ], td [ class "w-10 text-center" ] [ text "+" ] ]
@@ -223,12 +200,33 @@ tableContent model =
         firstRows =
             List.drop 1 visibleRows |> List.map (rowElement NotLastRow)
 
-        paginationRow =
-            [ tr [ rowClass LastRow ] [ td [ colspan 3 ] [ pagination model.currentPageIndex (List.length visibleRows) (List.length reversed) ] ] ]
-
         rows =
-            firstRows ++ (lastRow ++ paginationRow)
+            firstRows ++ lastRow
     in
+    div [ class "md:container md:mx-auto mt-16 p-2 border min-h-664 border-red-300 rounded-md flex flex-col justify-self-start" ]
+        [ content model
+        , dailyTable rows
+        , pagination model.currentPageIndex (List.length visibleRows) (List.length reversed)
+        ]
+
+
+type RowType
+    = LastRow
+    | NotLastRow
+
+
+rowClass : RowType -> Attribute msg
+rowClass row =
+    case row of
+        LastRow ->
+            class "h-12"
+
+        NotLastRow ->
+            class "h-12 border-b"
+
+
+tableContent : List (Html Msg) -> List (Html Msg)
+tableContent rows =
     if List.length rows == 0 then
         [ tr [ rowClass LastRow ] [ td [ colspan 3, class "text-center" ] [ text "no branches" ] ] ]
 
@@ -248,8 +246,8 @@ resolveBranches branches =
     List.map (\branchData -> withDefault defaultBranchData branchData) branches
 
 
-dailyTable : Model -> Html Msg
-dailyTable model =
+dailyTable : List (Html Msg) -> Html Msg
+dailyTable rows =
     table [ class "mt-8 w-full box-content" ]
         [ thead []
             [ tr [ rowClass NotLastRow ]
@@ -258,7 +256,7 @@ dailyTable model =
                 , th [ class "text-center w-10" ] [ text "Site" ]
                 ]
             ]
-        , tbody [] (tableContent model)
+        , tbody [] (tableContent rows)
         ]
 
 
@@ -312,7 +310,7 @@ pagination page rows pages =
         liClasses =
             "border border-red-700 rounded-md mr-1 text-center leading-8 w-8 h-8 hover:bg-red-200 cursor-pointer select-none"
     in
-    nav [ class "flex justify-between" ]
+    nav [ class "w-full flex justify-between mt-auto" ]
         [ div [ class "flex items-center ml-2" ] [ text (Debug.toString (1 + visablePages) ++ "-" ++ Debug.toString (rows + visablePages)), text (" of " ++ Debug.toString pages) ]
         , ul
             [ class "flex list-none mr-2" ]
