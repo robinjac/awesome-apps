@@ -228,7 +228,7 @@ rowClass row =
 tableContent : List (Html Msg) -> List (Html Msg)
 tableContent rows =
     if List.length rows == 0 then
-        [ Html.tr [ rowClass LastRow ] [ Html.td [ colspan 3, class "text-center" ] [ Html.text "no branches" ] ] ]
+        [ Html.tr [ rowClass LastRow ] [ Html.td [ colspan 3, class "text-center" ] [ Html.text "No branches" ] ] ]
 
     else
         rows
@@ -295,10 +295,10 @@ selectField selects =
 shouldDisable : Bool -> String
 shouldDisable bool =
     if bool then
-        "pointer-events-none opacity-40"
+        " pointer-events-none opacity-40"
 
     else
-        ""
+        " hover:bg-gray-900 hover:text-white"
 
 
 pagination : Int -> Int -> Int -> Html Msg
@@ -308,7 +308,7 @@ pagination page rows pages =
             page * maxRows
 
         liClasses =
-            "border font-bold border-gray-300 bg-gray-200 text-gray-900 hover:bg-gray-900 hover:text-white rounded-md mr-1 text-center leading-8 w-8 h-8 cursor-pointer select-none"
+            "border font-bold border-gray-300 bg-gray-200 text-gray-900 rounded-md mr-1 text-center leading-8 w-8 h-8 cursor-pointer select-none"
     in
     Html.nav [ class "w-full flex justify-between mt-auto" ]
         [ Html.div [ class "flex items-center ml-2" ] [ Html.text (Debug.toString (1 + visablePages) ++ "-" ++ Debug.toString (rows + visablePages)), Html.text (" of " ++ Debug.toString pages) ]
